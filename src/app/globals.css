@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ═══════════════════════════════════════════════════════
+   TEDLYNS — "MIDNIGHT LUX" DESIGN SYSTEM
+   The Onyx Theme: Obsidian, Ivory, Gold, Burgundy, Teal
+   ═══════════════════════════════════════════════════════ */
+
+@theme inline {
+  /* ── Brand Palette ── */
+  --color-obsidian: #000000;
+  --color-ivory: #FFFFF0;
+  --color-gold: #D4AF37;
+  --color-burgundy: #800020;
+  --color-teal: #2A9D8F;
+  --color-glass: rgba(0, 0, 0, 0.75);
+  --color-glass-heavy: rgba(0, 0, 0, 0.85);
+
+  /* ── Gold Shades ── */
+  --color-gold-50: #FBF7E8;
+  --color-gold-100: #F5ECC5;
+  --color-gold-200: #EDDC96;
+  --color-gold-300: #E5CC67;
+  --color-gold-400: #D4AF37;
+  --color-gold-500: #B8962E;
+  --color-gold-600: #9A7C25;
+  --color-gold-700: #7C631C;
+  --color-gold-800: #5E4A14;
+  --color-gold-900: #40310C;
+
+  /* ── Burgundy Shades ── */
+  --color-burgundy-50: #FCE8EE;
+  --color-burgundy-100: #F5C2D0;
+  --color-burgundy-200: #E68BA5;
+  --color-burgundy-300: #CC4D6F;
+  --color-burgundy-400: #A62D4E;
+  --color-burgundy-500: #800020;
+  --color-burgundy-600: #6B001A;
+  --color-burgundy-700: #560015;
+
+  /* ── shadcn/ui token mapping ── */
+  --color-background: var(--color-obsidian);
+  --color-foreground: var(--color-ivory);
+  --color-card: #0A0A0A;
+  --color-card-foreground: var(--color-ivory);
+  --color-popover: #0A0A0A;
+  --color-popover-foreground: var(--color-ivory);
+  --color-primary: var(--color-gold);
+  --color-primary-foreground: var(--color-obsidian);
+  --color-secondary: #1A1A1A;
+  --color-secondary-foreground: var(--color-ivory);
+  --color-muted: #1A1A1A;
+  --color-muted-foreground: #A3A3A3;
+  --color-accent: var(--color-gold);
+  --color-accent-foreground: var(--color-obsidian);
+  --color-destructive: var(--color-burgundy);
+  --color-destructive-foreground: var(--color-ivory);
+  --color-success: var(--color-teal);
+  --color-success-foreground: var(--color-obsidian);
+  --color-border: rgba(212, 175, 55, 0.15);
+  --color-input: rgba(212, 175, 55, 0.1);
+  --color-ring: var(--color-gold);
+
+  /* ── Typography ── */
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-playfair);
+  --font-mono: var(--font-geist-mono);
+
+  /* ── Radii ── */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+/* ── Base Styles ── */
+body {
+  background: var(--color-obsidian);
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(212, 175, 55, 0.3);
+  color: var(--color-ivory);
+}
+
+/* ── Scrollbar (Webkit) ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.4);
+}
+
+/* ── Tabular numbers for metrics ── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
