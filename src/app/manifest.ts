@@ -14,6 +14,11 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["food", "business", "lifestyle"],
     icons: [
       {
+        src: "/favicon.ico",
+        sizes: "64x64",
+        type: "image/x-icon",
+      },
+      {
         src: "/icon",
         sizes: "192x192",
         type: "image/png",
@@ -23,6 +28,11 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
+      },
+      {
+        src: "/apple-icon",
+        sizes: "180x180",
+        type: "image/png",
       },
     ],
   };
