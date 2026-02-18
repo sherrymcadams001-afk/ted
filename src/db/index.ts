@@ -41,6 +41,7 @@ function mapUser(row: Record<string, unknown>): User {
     role: (row.role as User["role"]) ?? "private",
     company: (row.company as string) ?? null,
     phone: (row.phone as string) ?? null,
+    avatar: (row.avatar as string) ?? null,
     createdAt: toDate(row.created_at),
     updatedAt: toDate(row.updated_at),
   };
@@ -143,6 +144,7 @@ export async function createUser(data: NewUser, d1?: D1 | null): Promise<User> {
       role: data.role ?? "private",
       company: data.company ?? null,
       phone: data.phone ?? null,
+      avatar: (data as unknown as { avatar?: string | null }).avatar ?? null,
       createdAt: new Date(now * 1000),
       updatedAt: new Date(now * 1000),
     };
@@ -156,11 +158,62 @@ export async function createUser(data: NewUser, d1?: D1 | null): Promise<User> {
     role: data.role ?? "private",
     company: data.company ?? null,
     phone: data.phone ?? null,
+    avatar: (data as unknown as { avatar?: string | null }).avatar ?? null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
   store.users.push(user);
   return user;
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: { name?: string; email?: string; phone?: string | null; avatar?: string | null },
+  d1?: D1 | null
+): Promise<User | undefined> {
+  const now = nowEpoch();
+
+  if (d1) {
+    const existing = await findUserById(userId, d1);
+    if (!existing) return undefined;
+
+    const nextName = data.name ?? existing.name;
+    const nextEmail = data.email ?? existing.email;
+    const nextPhone = data.phone ?? existing.phone ?? null;
+    const nextAvatar = data.avatar ?? existing.avatar ?? null;
+
+    await d1
+      .prepare(
+        `UPDATE users
+         SET name = ?, email = ?, phone = ?, avatar = ?, updated_at = ?
+         WHERE id = ?`
+      )
+      .bind(nextName, nextEmail, nextPhone, nextAvatar, now, userId)
+      .run();
+
+    return {
+      ...existing,
+      name: nextName,
+      email: nextEmail,
+      phone: nextPhone,
+      avatar: nextAvatar,
+      updatedAt: new Date(now * 1000),
+    };
+  }
+
+  const idx = store.users.findIndex((u) => u.id === userId);
+  if (idx === -1) return undefined;
+  const existing = store.users[idx];
+  const updated: User = {
+    ...existing,
+    name: data.name ?? existing.name,
+    email: data.email ?? existing.email,
+    phone: data.phone ?? existing.phone ?? null,
+    avatar: data.avatar ?? existing.avatar ?? null,
+    updatedAt: new Date(),
+  };
+  store.users[idx] = updated;
+  return updated;
 }
 
 export async function getAllUsers(d1?: D1 | null): Promise<User[]> {
@@ -243,6 +296,17 @@ export async function deleteEvent(id: string, userId: string, d1?: D1 | null): P
     return (result.meta as Record<string, unknown>)?.changes !== 0;
   }
   const idx = store.events.findIndex((e) => e.id === id && e.userId === userId);
+  if (idx === -1) return false;
+  store.events.splice(idx, 1);
+  return true;
+}
+
+export async function deleteEventAsAdmin(id: string, d1?: D1 | null): Promise<boolean> {
+  if (d1) {
+    const result = await d1.prepare("DELETE FROM events WHERE id = ?").bind(id).run();
+    return (result.meta as Record<string, unknown>)?.changes !== 0;
+  }
+  const idx = store.events.findIndex((e) => e.id === id);
   if (idx === -1) return false;
   store.events.splice(idx, 1);
   return true;
@@ -705,6 +769,7 @@ const ADMIN_SEED = {
   role: "admin" as const,
   company: "Tedlyns",
   phone: null,
+  avatar: null,
 };
 
 // Sync seed for in-memory store (runs on module load)

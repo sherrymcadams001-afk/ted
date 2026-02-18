@@ -19,6 +19,7 @@ export const users = sqliteTable("users", {
     .default("private"),
   company: text("company"),
   phone: text("phone"),
+  avatar: text("avatar"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" })

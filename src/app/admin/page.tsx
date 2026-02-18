@@ -13,6 +13,7 @@ import {
   Shield,
   Clock,
   ArrowRight,
+  Settings,
 } from "lucide-react";
 
 type AdminStats = {
@@ -124,6 +125,22 @@ export default function AdminPage() {
         >
           Menu Manager
           <ArrowRight size={12} />
+        </Link>
+
+        <Link
+          href="/admin/birthdays"
+          className="flex items-center gap-1.5 rounded-lg border border-gold/15 px-4 py-2 text-xs text-ivory/60 hover:bg-gold/5 hover:text-gold transition-colors"
+        >
+          Birthdays
+          <ArrowRight size={12} />
+        </Link>
+
+        <Link
+          href="/admin/profile"
+          className="flex items-center gap-1.5 rounded-lg border border-gold/15 px-4 py-2 text-xs text-ivory/60 hover:bg-gold/5 hover:text-gold transition-colors"
+        >
+          Profile
+          <Settings size={12} />
         </Link>
       </div>
 

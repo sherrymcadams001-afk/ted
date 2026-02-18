@@ -6,6 +6,8 @@ import {
   createEvent,
   deleteEvent,
   getAllEvents,
+  getAllUsers,
+  deleteEventAsAdmin,
 } from "@/db";
 import { getCloudflareDb } from "@/lib/get-db";
 
@@ -27,11 +29,21 @@ export async function GET() {
 
   const d1 = await getCloudflareDb();
   const isAdmin = (session.user as { role: string }).role === "admin";
-  const events = isAdmin
-    ? await getAllEvents(d1)
-    : await getEventsByUserId(session.user.id, d1);
+  if (!isAdmin) {
+    const events = await getEventsByUserId(session.user.id, d1);
+    return NextResponse.json({ events });
+  }
 
-  return NextResponse.json({ events });
+  const [events, users] = await Promise.all([getAllEvents(d1), getAllUsers(d1)]);
+  const userMap = new Map(users.map((u) => [u.id, u] as const));
+
+  return NextResponse.json({
+    events: events.map((e) => ({
+      ...e,
+      userName: userMap.get(e.userId)?.name ?? "Unknown",
+      userEmail: userMap.get(e.userId)?.email ?? "",
+    })),
+  });
 }
 
 // POST — create a new event
@@ -43,11 +55,15 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const data = eventSchema.parse(body);
+    const isAdmin = (session.user as { role: string }).role === "admin";
+    const schema = isAdmin
+      ? eventSchema.extend({ userId: z.string().min(1).optional() })
+      : eventSchema;
+    const data = schema.parse(body) as z.infer<typeof eventSchema> & { userId?: string };
 
     const d1 = await getCloudflareDb();
     const event = await createEvent({
-      userId: session.user.id,
+      userId: (isAdmin && data.userId) ? data.userId : session.user.id,
       name: data.name,
       date: data.date,
       type: data.type,
@@ -83,7 +99,10 @@ export async function DELETE(req: Request) {
   }
 
   const d1 = await getCloudflareDb();
-  const success = await deleteEvent(id, session.user.id, d1);
+  const isAdmin = (session.user as { role: string }).role === "admin";
+  const success = isAdmin
+    ? await deleteEventAsAdmin(id, d1)
+    : await deleteEvent(id, session.user.id, d1);
   if (!success) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
