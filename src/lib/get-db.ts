@@ -40,9 +40,7 @@ interface CloudflareEnv {
 export async function getCloudflareDb(): Promise<D1 | null> {
   let getRequestContext: undefined | (() => unknown);
   try {
-    ({ getRequestContext } = await import(
-      /* webpackIgnore: true */ "@cloudflare/next-on-pages"
-    ));
+    ({ getRequestContext } = await import("@cloudflare/next-on-pages"));
   } catch {
     // Local dev: module isn't available / context isn't present.
     return null;
