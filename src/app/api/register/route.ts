@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { hash } from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 import { z } from "zod";
 import { findUserByEmail, createUser } from "@/db";
 import { getCloudflareDb } from "@/lib/get-db";
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     // Hash password
-    const hashedPassword = await hash(data.password, 12);
+    const hashedPassword = await hashPassword(data.password);
 
     // Create user
     const user = await createUser({

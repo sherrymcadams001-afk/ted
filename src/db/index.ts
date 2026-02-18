@@ -700,8 +700,8 @@ const ADMIN_SEED = {
   id: "admin-seed-001",
   name: "Ere (Admin)",
   email: "admin@tedlyns.com",
-  // bcrypt hash of "admin123" — pre-computed so no async needed
-  password: "$2b$12$p4b/nhONEVgBsGQc/GppY.dExf3zNrSkqJWAdp722QZVul5.CHk5C",
+  // PBKDF2 hash of "admin123" — pre-computed (edge-compatible)
+  password: "$pbkdf2$100000$80Cbqa91T/iKrnBQqvo2kw==$8zCIYYcpJOF9D/GC1+wqHyvWWN3N4fMfointdBkPGlg=",
   role: "admin" as const,
   company: "Tedlyns",
   phone: null,

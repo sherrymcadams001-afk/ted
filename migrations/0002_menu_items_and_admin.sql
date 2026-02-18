@@ -24,14 +24,14 @@ CREATE INDEX IF NOT EXISTS idx_menu_items_category ON menu_items(category);
 -- ═══════════════════════════════════════════════
 -- Seed: Admin Account
 -- Email: admin@tedlyns.com  Password: admin123
--- bcrypt hash pre-computed (12 rounds)
+-- PBKDF2 hash pre-computed (edge-compatible, 100k iterations)
 -- ═══════════════════════════════════════════════
 INSERT OR IGNORE INTO users (id, name, email, password, role, company, phone, created_at, updated_at)
 VALUES (
   'admin-seed-001',
   'Ere (Admin)',
   'admin@tedlyns.com',
-  '$2b$12$p4b/nhONEVgBsGQc/GppY.dExf3zNrSkqJWAdp722QZVul5.CHk5C',
+  '$pbkdf2$100000$80Cbqa91T/iKrnBQqvo2kw==$8zCIYYcpJOF9D/GC1+wqHyvWWN3N4fMfointdBkPGlg=',
   'admin',
   'Tedlyns',
   NULL,

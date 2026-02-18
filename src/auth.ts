@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
+import { verifyPassword } from "@/lib/password";
 import { findUserByEmail, ensureAdminExists } from "@/db";
 import { getCloudflareDb } from "@/lib/get-db";
 
@@ -26,7 +26,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const user = await findUserByEmail(email, d1);
         if (!user) return null;
 
-        const isValid = await compare(password, user.password);
+        const isValid = await verifyPassword(password, user.password);
         if (!isValid) return null;
 
         return {
