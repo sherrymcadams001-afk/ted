@@ -2,15 +2,18 @@
   "name": "tedlyns",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "binding": "ASSETS"
-  }
-  // ── D1 Database (activate in Phase C/D) ──
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "tedlyns-db",
-  //     "database_id": "YOUR_DATABASE_ID"
-  //   }
-  // ]
+  "pages_build_output_dir": ".vercel/output/static",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tedlyns-db",
+      "database_id": "38567476-9efe-4360-a0e7-77163409fbc1"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MENU_IMAGES",
+      "bucket_name": "tedlyns-images"
+    }
+  ]
 }

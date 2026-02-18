@@ -6,11 +6,32 @@ import {
   getConversationById,
   updateConversationStatus,
 } from "@/db";
+import { getCloudflareDb } from "@/lib/get-db";
+
+export const runtime = "edge";
+
+/** Resolve user identity — authenticated session or guest ID from header */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function resolveIdentity(session: any, req?: Request) {
+  if (session?.user?.id) {
+    return {
+      userId: session.user.id as string,
+      isAdmin: session.user?.role === "admin",
+      isGuest: false,
+    };
+  }
+  const guestId = req?.headers.get("x-guest-id");
+  if (guestId) {
+    return { userId: `guest-${guestId}`, isAdmin: false, isGuest: true };
+  }
+  return null;
+}
 
 // GET — fetch messages for a conversation (polling endpoint)
 export async function GET(req: Request) {
   const session = await auth();
-  if (!session?.user?.id) {
+  const identity = resolveIdentity(session, req);
+  if (!identity) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -23,8 +44,10 @@ export async function GET(req: Request) {
     );
   }
 
+  const d1 = await getCloudflareDb();
+
   // Verify access
-  const convo = getConversationById(conversationId);
+  const convo = await getConversationById(conversationId, d1);
   if (!convo) {
     return NextResponse.json(
       { error: "Conversation not found" },
@@ -32,12 +55,12 @@ export async function GET(req: Request) {
     );
   }
 
-  const isAdmin = (session.user as { role: string }).role === "admin";
-  if (convo.userId !== session.user.id && !isAdmin) {
+  const isAdmin = identity.isAdmin;
+  if (convo.userId !== identity.userId && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const messages = getMessagesByConversationId(conversationId);
+  const messages = await getMessagesByConversationId(conversationId, d1);
 
   return NextResponse.json({ messages, status: convo.status });
 }
@@ -45,7 +68,8 @@ export async function GET(req: Request) {
 // POST — send a message
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user?.id) {
+  const identity = resolveIdentity(session, req);
+  if (!identity) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -59,8 +83,10 @@ export async function POST(req: Request) {
     );
   }
 
+  const d1 = await getCloudflareDb();
+
   // Verify access
-  const convo = getConversationById(conversationId);
+  const convo = await getConversationById(conversationId, d1);
   if (!convo) {
     return NextResponse.json(
       { error: "Conversation not found" },
@@ -68,17 +94,17 @@ export async function POST(req: Request) {
     );
   }
 
-  const isAdmin = (session.user as { role: string }).role === "admin";
-  if (convo.userId !== session.user.id && !isAdmin) {
+  const isAdminPost = identity.isAdmin;
+  if (convo.userId !== identity.userId && !isAdminPost) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const message = createMessage({
+  const message = await createMessage({
     conversationId,
-    senderId: session.user.id,
-    senderRole: isAdmin ? "admin" : "user",
+    senderId: identity.userId,
+    senderRole: isAdminPost ? "admin" : "user",
     content: content.trim(),
-  });
+  }, d1);
 
   return NextResponse.json({ message }, { status: 201 });
 }
@@ -102,7 +128,8 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const updated = updateConversationStatus(conversationId, status);
+  const d1 = await getCloudflareDb();
+  const updated = await updateConversationStatus(conversationId, status, d1);
   if (!updated) {
     return NextResponse.json(
       { error: "Conversation not found" },

@@ -35,14 +35,15 @@ export const metadata: Metadata = {
     template: "%s | Tedlyns",
   },
   description:
-    "Abuja's premier culinary logistics. Corporate catering, artisan bakes, and curated gifting.",
+    "Abuja's premier culinary logistics. Corporate catering, artisan bakes, and curated gifting — we bring the flavour, you bring the people.",
   keywords: [
     "Tedlyns",
     "Abuja catering",
-    "corporate catering",
-    "artisan cakes",
+    "corporate catering Nigeria",
+    "artisan cakes Abuja",
     "curated gifts",
     "culinary logistics",
+    "event catering Abuja",
   ],
   authors: [{ name: "Tedlyns Concept" }],
   creator: "Tedlyns Concept",
@@ -77,20 +78,20 @@ export default function RootLayout({
     >
       <body className="bg-obsidian text-ivory font-sans antialiased min-h-screen">
         <AuthProvider>
-        {/* Desktop Header — hidden on mobile */}
-        <DesktopHeader />
+          {/* Desktop Header — hidden on mobile */}
+          <DesktopHeader />
 
-        {/* Main Content — padded for mobile bottom nav */}
-        <main className="pb-20 md:pb-0">{children}</main>
+          {/* Main Content — padded for mobile bottom nav */}
+          <main className="pb-20 md:pb-0">{children}</main>
 
-        {/* Footer */}
-        <Footer />
+          {/* Footer */}
+          <Footer />
 
-        {/* Mobile Bottom Navigation — hidden on desktop */}
-        <MobileBottomNav />
+          {/* Mobile Bottom Navigation — hidden on desktop */}
+          <MobileBottomNav />
 
-        {/* Floating Concierge Chat Button */}
-        <ChatFAB />
+          {/* Floating Concierge Chat Button */}
+          <ChatFAB />
         </AuthProvider>
       </body>
     </html>

@@ -5,6 +5,42 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Volume2, VolumeX } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
+import { motion } from "framer-motion";
+
+/* ── Staggered reveal orchestration ── */
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.2, delayChildren: 0.3 } },
+};
+
+const EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: EASE },
+  },
+};
+
+const scaleFade = {
+  hidden: { opacity: 0, scale: 0.85 },
+  show: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.7, ease: EASE },
+  },
+};
+
+const dividerExpand = {
+  hidden: { scaleX: 0, opacity: 0 },
+  show: {
+    scaleX: 1,
+    opacity: 1,
+    transition: { duration: 0.6, ease: EASE },
+  },
+};
 
 export function HeroSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -14,9 +50,7 @@ export function HeroSection() {
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
-      video.play().catch(() => {
-        // Autoplay blocked — fine, video stays paused
-      });
+      video.play().catch(() => {});
     }
   }, []);
 
@@ -24,11 +58,6 @@ export function HeroSection() {
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* ── Video Background ── */}
       <div className="absolute inset-0 z-0">
-        {/* 
-          Using /vid.mp4 as the cinematic food loop.
-          Ideal: slow-motion macro shots, deep shadows, warm tones.
-          Recommended: 1080p h.264 MP4, < 15MB, 10-20s loop.
-        */}
         <video
           ref={videoRef}
           className={cn(
@@ -52,69 +81,70 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian/40 via-transparent to-transparent" />
       </div>
 
-      {/* ── Fallback Background (no video) ── */}
+      {/* ── Fallback Background ── */}
       {!isLoaded && (
         <div className="absolute inset-0 z-0 bg-obsidian">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(212,175,55,0.06)_0%,_transparent_70%)]" />
         </div>
       )}
 
-      {/* ── Content Overlay ── */}
-      <div className="relative z-10 flex flex-col items-center gap-8 px-6 text-center">
-        {/* Wordmark */}
-        <div className="flex flex-col items-center gap-2">
-          <h1
-            className={cn(
-              "font-serif font-bold tracking-wider text-ivory",
-              "text-5xl sm:text-6xl md:text-7xl lg:text-8xl",
-              "drop-shadow-[0_2px_20px_rgba(212,175,55,0.15)]"
-            )}
-          >
-            Tedlyns
-          </h1>
-          <p className="text-[11px] tracking-[0.35em] uppercase text-ivory/40 md:text-xs">
-            Concept
-          </p>
-        </div>
-
-        {/* Tagline */}
-        <p
+      {/* ── Content ── */}
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-10 px-6 text-center"
+      >
+        {/* Tagline — the hero statement */}
+        <motion.h1
+          variants={scaleFade}
           className={cn(
-            "font-serif italic text-gold/90",
-            "text-lg sm:text-xl md:text-2xl lg:text-3xl",
-            "tracking-wide"
+            "font-serif italic text-gold",
+            "text-3xl sm:text-4xl md:text-5xl lg:text-6xl",
+            "tracking-wide drop-shadow-[0_2px_20px_rgba(212,175,55,0.2)]"
           )}
         >
           Indulge Yourself
-        </p>
+        </motion.h1>
 
         {/* Gold Divider */}
-        <div className="flex items-center gap-3">
+        <motion.div variants={dividerExpand} className="flex items-center gap-3 origin-center">
           <div className="h-px w-12 bg-gold/30 sm:w-16" />
           <div className="h-1.5 w-1.5 rounded-full bg-gold/50" />
           <div className="h-px w-12 bg-gold/30 sm:w-16" />
-        </div>
+        </motion.div>
 
         {/* Subtitle */}
-        <p className="max-w-lg text-sm leading-relaxed text-ivory/50 sm:text-base md:text-lg">
-          Abuja&apos;s premier culinary logistics — corporate catering, artisan
-          bakes, and curated gifting.
-        </p>
+        <motion.p
+          variants={fadeUp}
+          className="max-w-lg text-sm leading-relaxed text-ivory/50 sm:text-base md:text-lg"
+        >
+          Where every dish tells a story and every gathering becomes an
+          occasion. Abuja&apos;s finest culinary logistics — seamless from
+          our kitchen to your table.
+        </motion.p>
 
         {/* CTAs */}
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:gap-4">
+        <motion.div variants={fadeUp} className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           <Link href="/curate">
-            <Button variant="outline" size="lg" className="min-w-[200px] border-gold/40 text-gold hover:bg-gold/10">
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 border-gold/40 text-gold hover:bg-gold/10 hover:border-gold/60"
+            >
               Corporate Solutions
             </Button>
           </Link>
           <Link href="/curate">
-            <Button size="lg" className="min-w-[200px] bg-burgundy text-ivory hover:bg-burgundy-400 border border-burgundy-400/20">
+            <Button
+              size="lg"
+              className="gap-2 bg-burgundy text-ivory hover:bg-burgundy-400 shadow-lg shadow-burgundy/20"
+            >
               Retail Collections
             </Button>
           </Link>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ── Mute/Unmute Toggle ── */}
       <button
@@ -134,14 +164,19 @@ export function HeroSection() {
       </button>
 
       {/* ── Scroll Indicator ── */}
-      <div className="absolute bottom-28 left-1/2 z-10 -translate-x-1/2 md:bottom-8">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2.2, duration: 0.8 }}
+        className="absolute bottom-28 left-1/2 z-10 -translate-x-1/2 md:bottom-8"
+      >
         <div className="flex flex-col items-center gap-2">
           <span className="text-[10px] tracking-[0.2em] uppercase text-ivory/30">
             Explore
           </span>
           <div className="h-8 w-px animate-pulse bg-gradient-to-b from-gold/40 to-transparent" />
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

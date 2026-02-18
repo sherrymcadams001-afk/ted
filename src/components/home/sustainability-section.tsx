@@ -1,99 +1,43 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Heart, GraduationCap, UtensilsCrossed, Shield } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Heart, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
-/* ═══════════════════════════════════════════════
-   ANIMATED COUNTER — Counts up on scroll into view
-   Uses tabular-nums for stable layout
-   ═══════════════════════════════════════════════ */
+const EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
-function AnimatedCounter({
-  target,
-  suffix = "",
-  prefix = "",
-  duration = 2000,
-}: {
-  target: number;
-  suffix?: string;
-  prefix?: string;
-  duration?: number;
-}) {
-  const [count, setCount] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated) {
-          setHasAnimated(true);
-
-          const start = performance.now();
-          const animate = (now: number) => {
-            const elapsed = now - start;
-            const progress = Math.min(elapsed / duration, 1);
-            // Ease-out cubic
-            const eased = 1 - Math.pow(1 - progress, 3);
-            setCount(Math.floor(eased * target));
-            if (progress < 1) requestAnimationFrame(animate);
-          };
-          requestAnimationFrame(animate);
-        }
-      },
-      { threshold: 0.3 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [target, duration, hasAnimated]);
-
-  return (
-    <span ref={ref} className="tabular-nums">
-      {prefix}
-      {count.toLocaleString()}
-      {suffix}
-    </span>
-  );
-}
-
-/* ═══════════════════════════════════════════════ */
-
-interface Metric {
-  label: string;
-  value: number;
-  suffix: string;
-  prefix: string;
-  icon: React.ElementType;
-}
-
-const metrics: Metric[] = [
-  {
-    label: "Meals Donated",
-    value: 2400,
-    suffix: "+",
-    prefix: "",
-    icon: UtensilsCrossed,
+const slideLeft = {
+  hidden: { opacity: 0, x: -50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: EASE },
   },
-  {
-    label: "Students Trained",
-    value: 150,
-    suffix: "+",
-    prefix: "",
-    icon: GraduationCap,
+};
+
+const slideRight = {
+  hidden: { opacity: 0, x: 50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: EASE },
   },
-  {
-    label: "Communities Reached",
-    value: 12,
-    suffix: "",
-    prefix: "",
-    icon: Heart,
-  },
-];
+};
+
+const statReveal = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      delay: i * 0.12,
+      ease: EASE,
+    },
+  }),
+};
 
 export function SustainabilitySection() {
   return (
@@ -101,92 +45,74 @@ export function SustainabilitySection() {
       {/* Background accent */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(128,0,32,0.06)_0%,_transparent_60%)]" />
 
-      <div className="relative mx-auto max-w-4xl">
-        {/* Section Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-burgundy-300 mb-3">
-            Profits with Purpose
-          </p>
-          <h2 className="font-serif text-3xl font-bold text-ivory md:text-4xl lg:text-5xl">
-            Ted&apos;s Tribe
-          </h2>
-          <p className="mt-4 text-sm text-ivory/40 max-w-lg mx-auto md:text-base leading-relaxed">
-            Every indulgence fuels a greater mission. A portion of every Tedlyns
-            order supports the{" "}
-            <span className="text-burgundy-300">Kindred Spirits</span> initiative
-            — feeding communities, training young chefs, and nourishing futures.
-          </p>
-        </div>
-
-        {/* CEO Story Card */}
-        <div className="mb-12 md:mb-16 rounded-2xl border border-burgundy/20 bg-burgundy/[0.03] p-6 md:p-8">
-          <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-8">
-            {/* Placeholder Portrait */}
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-2 border-burgundy/20 bg-burgundy/10">
-              <span className="font-serif text-2xl font-bold text-burgundy-300">
-                EE
-              </span>
+      <div className="relative mx-auto max-w-6xl">
+        <div className="flex flex-col items-center gap-8 md:flex-row md:gap-16 lg:gap-24">
+          {/* Left: Message — slides in from left */}
+          <motion.div
+            variants={slideLeft}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            className="flex-1 text-center md:text-left"
+          >
+            <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-burgundy-300 mb-3">
+              Profits with Purpose
+            </p>
+            <h2 className="font-serif text-3xl font-bold text-ivory md:text-4xl lg:text-5xl">
+              Ted&apos;s Tribe
+            </h2>
+            <p className="mt-4 text-sm text-ivory/40 max-w-md mx-auto md:mx-0 md:text-base leading-relaxed">
+              Every order you place does more than satisfy a craving — it feeds
+              someone in need, trains a young chef, and supports communities
+              across Abuja. That&apos;s the Tedlyns promise.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center md:justify-start">
+              <Link href="/tribe">
+                <Button variant="outline" className="gap-2">
+                  <Heart size={14} />
+                  Learn About Our Mission
+                </Button>
+              </Link>
+              <Link href="/curate">
+                <Button variant="ghost" className="gap-2 text-ivory/50">
+                  Place an Order
+                  <ArrowRight size={14} />
+                </Button>
+              </Link>
             </div>
+          </motion.div>
 
-            <div className="text-center md:text-left">
-              <h3 className="font-serif text-lg font-semibold text-ivory mb-1">
-                Ere Erhiaghe
-              </h3>
-              <p className="text-xs uppercase tracking-wider text-burgundy-300 mb-3">
-                Founder & CEO
-              </p>
-              <p className="text-sm text-ivory/50 leading-relaxed">
-                &ldquo;Food is more than sustenance — it&apos;s connection.
-                Tedlyns was born from the belief that every meal shared is an
-                opportunity to uplift. Through our Kindred Spirits mission, we
-                channel the joy of indulgence into tangible change for
-                communities across Nigeria.&rdquo;
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Metrics Grid */}
-        <div className="grid gap-4 sm:grid-cols-3 md:gap-6">
-          {metrics.map((metric) => (
-            <div
-              key={metric.label}
-              className={cn(
-                "flex flex-col items-center gap-3 rounded-2xl p-6",
-                "border border-gold/10 bg-obsidian",
-                "text-center"
-              )}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-burgundy/10 border border-burgundy/10">
-                <metric.icon size={18} className="text-burgundy-300" strokeWidth={1.5} />
-              </div>
-              <span className="font-serif text-3xl font-bold text-ivory md:text-4xl">
-                <AnimatedCounter
-                  target={metric.value}
-                  suffix={metric.suffix}
-                  prefix={metric.prefix}
-                />
-              </span>
-              <span className="text-xs uppercase tracking-wider text-ivory/40">
-                {metric.label}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Red Cross Badge */}
-        <div className="mt-12 flex items-center justify-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-burgundy/10 border border-burgundy/15">
-            <Shield size={16} className="text-burgundy-300" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-ivory/60">
-              Nigerian Red Cross Certified
-            </span>
-            <span className="text-[10px] text-ivory/30">
-              Food safety & humanitarian partnership
-            </span>
-          </div>
+          {/* Right: Quick stats — slides in from right with staggered children */}
+          <motion.div
+            variants={slideRight}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            className="grid grid-cols-3 gap-4 md:flex md:flex-col md:gap-4 md:min-w-[200px]"
+          >
+            {[
+              { value: "2,400+", label: "Meals Donated", color: "text-gold", border: "border-gold/10", bg: "bg-gold/[0.03]" },
+              { value: "150+", label: "Chefs Trained", color: "text-teal", border: "border-teal/10", bg: "bg-teal/[0.03]" },
+              { value: "12", label: "Communities", color: "text-burgundy-300", border: "border-burgundy/10", bg: "bg-burgundy/[0.03]" },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                custom={i}
+                variants={statReveal}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className={`rounded-xl border ${stat.border} ${stat.bg} p-4 text-center md:p-5`}
+              >
+                <p className={`font-serif text-2xl font-bold ${stat.color} md:text-3xl`}>
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-ivory/30">
+                  {stat.label}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>

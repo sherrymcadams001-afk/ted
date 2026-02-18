@@ -76,6 +76,24 @@ export const conversations = sqliteTable("conversations", {
     .$defaultFn(() => new Date()),
 });
 
+// ── Menu Items (Curate) ──
+export const menuItems = sqliteTable("menu_items", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  category: text("category", { enum: ["corporate", "bakery", "gifting"] }).notNull(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  badge: text("badge"),
+  serves: text("serves"),
+  leadTime: text("lead_time"),
+  image: text("image").notNull().default(""),
+  imagePrompt: text("image_prompt").notNull().default(""),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date()),
+});
+
 // ── Type exports for use across the app ──
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -85,3 +103,5 @@ export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type Conversation = typeof conversations.$inferSelect;
 export type NewConversation = typeof conversations.$inferInsert;
+export type MenuItem = typeof menuItems.$inferSelect;
+export type NewMenuItem = typeof menuItems.$inferInsert;

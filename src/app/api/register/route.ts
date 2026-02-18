@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { z } from "zod";
 import { findUserByEmail, createUser } from "@/db";
+import { getCloudflareDb } from "@/lib/get-db";
+
+export const runtime = "edge";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -16,8 +19,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = registerSchema.parse(body);
 
+    const d1 = await getCloudflareDb();
+
     // Check if user already exists
-    const existing = findUserByEmail(data.email);
+    const existing = await findUserByEmail(data.email, d1);
     if (existing) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
@@ -29,13 +34,13 @@ export async function POST(req: Request) {
     const hashedPassword = await hash(data.password, 12);
 
     // Create user
-    const user = createUser({
+    const user = await createUser({
       name: data.name,
       email: data.email,
       password: hashedPassword,
       role: data.role,
       company: data.company ?? null,
-    });
+    }, d1);
 
     return NextResponse.json(
       {

@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import {
   Users,
   CalendarDays,
@@ -11,6 +12,7 @@ import {
   Cake,
   Shield,
   Clock,
+  ArrowRight,
 } from "lucide-react";
 
 type AdminStats = {
@@ -88,29 +90,49 @@ export default function AdminPage() {
   if (!session || session.user.role !== "admin") return null;
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-8 md:py-14">
+    <div className="mx-auto max-w-3xl px-5 py-8 md:py-14 lg:max-w-6xl">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-1">
-          <Shield size={14} className="text-gold/60" />
-          <p className="text-[10px] uppercase tracking-[0.25em] text-gold/60">
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Shield size={14} className="text-gold/60" />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-gold/60">
+              Admin Panel
+            </p>
+          </div>
+          <h1 className="font-serif text-2xl font-bold text-ivory md:text-3xl">
             The Pass
+          </h1>
+          <p className="mt-1 text-sm text-ivory/40">
+            God Mode — everything happening across Tedlyns, at a glance
           </p>
         </div>
-        <h1 className="font-serif text-2xl font-bold text-ivory">
-          Admin Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-ivory/40">
-          Tedlyns operations overview
-        </p>
+        <Link
+          href="/concierge"
+          className="flex items-center gap-1.5 rounded-lg border border-gold/15 px-4 py-2 text-xs text-gold hover:bg-gold/5 transition-colors"
+        >
+          Concierge
+          <ArrowRight size={12} />
+        </Link>
       </div>
 
-      {/* Stats Grid */}
+      {/* Quick Links */}
+      <div className="mb-8 flex gap-2">
+        <Link
+          href="/admin/curate"
+          className="flex items-center gap-1.5 rounded-lg border border-gold/15 px-4 py-2 text-xs text-ivory/60 hover:bg-gold/5 hover:text-gold transition-colors"
+        >
+          Menu Manager
+          <ArrowRight size={12} />
+        </Link>
+      </div>
+
+      {/* Stats Grid — 4 columns on desktop */}
       {stats && (
-        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4 lg:gap-4">
           {[
             {
-              label: "Users",
+              label: "Total Users",
               value: stats.totalUsers,
               icon: Users,
               color: "text-gold",
@@ -118,7 +140,7 @@ export default function AdminPage() {
               border: "border-gold/15",
             },
             {
-              label: "Events",
+              label: "Celebrations",
               value: stats.totalEvents,
               icon: CalendarDays,
               color: "text-teal",
@@ -134,7 +156,7 @@ export default function AdminPage() {
               border: "border-burgundy/15",
             },
             {
-              label: "Upcoming",
+              label: "Upcoming B'days",
               value: stats.upcomingBirthdays,
               icon: Cake,
               color: "text-gold",
@@ -145,13 +167,13 @@ export default function AdminPage() {
             <div
               key={stat.label}
               className={cn(
-                "rounded-xl border p-4",
+                "rounded-xl border p-4 md:p-5",
                 stat.bg,
                 stat.border
               )}
             >
               <stat.icon size={16} className={cn("mb-2", stat.color)} />
-              <p className="text-2xl font-bold text-ivory tabular-nums">
+              <p className="text-2xl font-bold text-ivory tabular-nums md:text-3xl">
                 {stat.value}
               </p>
               <p className="text-[10px] uppercase tracking-wider text-ivory/30">
@@ -162,99 +184,102 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Upcoming Birthdays */}
-      <div className="mb-8">
-        <h2 className="mb-3 flex items-center gap-2 font-serif text-lg text-ivory/80">
-          <Cake size={16} className="text-gold/50" />
-          Upcoming Birthdays (7 days)
-        </h2>
-        {birthdays.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gold/10 py-10 text-center">
-            <p className="text-sm text-ivory/20">No upcoming birthdays</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {birthdays.map((bday) => (
-              <div
-                key={bday.id}
-                className="flex items-center justify-between rounded-xl border border-gold/10 bg-gold/[0.02] p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/10 text-xs font-bold text-gold">
-                    {new Date(bday.date).toLocaleDateString("en", {
-                      day: "2-digit",
-                    })}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-ivory">
-                      {bday.name}
-                    </p>
-                    <p className="text-xs text-ivory/30">
-                      {bday.relationship} · Client: {bday.userName}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-gold/50">
-                  {new Date(bday.date).toLocaleDateString("en-NG", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Recent Users */}
-      <div>
-        <h2 className="mb-3 flex items-center gap-2 font-serif text-lg text-ivory/80">
-          <Clock size={16} className="text-teal/50" />
-          Recent Users
-        </h2>
-        {recentUsers.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gold/10 py-10 text-center">
-            <p className="text-sm text-ivory/20">No users yet</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {recentUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between rounded-xl border border-ivory/5 bg-ivory/[0.02] p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ivory/5 text-xs font-bold text-ivory/40">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-ivory">
-                      {user.name}
-                    </p>
-                    <p className="text-xs text-ivory/30">
-                      {user.email}
-                      {user.company && ` · ${user.company}`}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-[9px] uppercase",
-                    user.role === "enterprise"
-                      ? "bg-teal/10 text-teal"
-                      : "bg-gold/10 text-gold/60"
-                  )}
+      {/* Desktop two-column layout for birthdays + users */}
+      <div className="flex flex-col gap-8 lg:flex-row lg:gap-8">
+        {/* Upcoming Birthdays */}
+        <div className="flex-1">
+          <h2 className="mb-3 flex items-center gap-2 font-serif text-lg text-ivory/80">
+            <Cake size={16} className="text-gold/50" />
+            Upcoming Birthdays (7 days)
+          </h2>
+          {birthdays.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gold/10 py-10 text-center">
+              <p className="text-sm text-ivory/20">No upcoming birthdays this week</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {birthdays.map((bday) => (
+                <div
+                  key={bday.id}
+                  className="flex items-center justify-between rounded-xl border border-gold/10 bg-gold/[0.02] p-3"
                 >
-                  {user.role}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/10 text-xs font-bold text-gold">
+                      {new Date(bday.date).toLocaleDateString("en", {
+                        day: "2-digit",
+                      })}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-ivory">
+                        {bday.name}
+                      </p>
+                      <p className="text-xs text-ivory/30">
+                        {bday.relationship} · Client: {bday.userName}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gold/50">
+                    {new Date(bday.date).toLocaleDateString("en-NG", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Users */}
+        <div className="flex-1">
+          <h2 className="mb-3 flex items-center gap-2 font-serif text-lg text-ivory/80">
+            <Clock size={16} className="text-teal/50" />
+            Recent Signups
+          </h2>
+          {recentUsers.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gold/10 py-10 text-center">
+              <p className="text-sm text-ivory/20">No users yet</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {recentUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between rounded-xl border border-ivory/5 bg-ivory/[0.02] p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ivory/5 text-xs font-bold text-ivory/40">
+                      {user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-ivory">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-ivory/30">
+                        {user.email}
+                        {user.company && ` · ${user.company}`}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[9px] uppercase",
+                      user.role === "enterprise"
+                        ? "bg-teal/10 text-teal"
+                        : "bg-gold/10 text-gold/60"
+                    )}
+                  >
+                    {user.role}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

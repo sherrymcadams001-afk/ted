@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getUpcomingBirthdays, getAllUsers, getAllConversations, getAllEvents } from "@/db";
+import { getCloudflareDb } from "@/lib/get-db";
+
+export const runtime = "edge";
 
 // GET — admin-only global overview
 export async function GET() {
@@ -14,10 +17,11 @@ export async function GET() {
     return NextResponse.json({ error: "Admin only" }, { status: 403 });
   }
 
-  const users = getAllUsers();
-  const events = getAllEvents();
-  const conversations = getAllConversations();
-  const upcomingBirthdays = getUpcomingBirthdays(7);
+  const d1 = await getCloudflareDb();
+  const users = await getAllUsers(d1);
+  const events = await getAllEvents(d1);
+  const conversations = await getAllConversations(d1);
+  const upcomingBirthdays = await getUpcomingBirthdays(7, d1);
 
   return NextResponse.json({
     stats: {
@@ -27,7 +31,7 @@ export async function GET() {
       upcomingBirthdays: upcomingBirthdays.length,
     },
     upcomingBirthdays,
-    recentUsers: users.slice(-10).reverse().map((u) => ({
+    recentUsers: users.slice(0, 10).map((u) => ({
       id: u.id,
       name: u.name,
       email: u.email,

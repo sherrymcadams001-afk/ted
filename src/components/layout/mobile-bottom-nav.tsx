@@ -15,8 +15,8 @@ const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/curate", label: "Curate", icon: UtensilsCrossed },
   { href: "/tribe", label: "Tribe", icon: Heart },
+  { href: "/concierge", label: "Chat", icon: MessageCircle },
   { href: "/account", label: "Account", icon: User },
-  { href: "/concierge", label: "Concierge", icon: MessageCircle },
 ];
 
 export function MobileBottomNav() {
@@ -27,7 +27,7 @@ export function MobileBottomNav() {
       className={cn(
         "fixed inset-x-0 bottom-0 z-50 flex md:hidden",
         "border-t border-gold/10",
-        "bg-black/75 backdrop-blur-xl",
+        "bg-black/80 backdrop-blur-xl",
         "pb-[env(safe-area-inset-bottom)]"
       )}
       role="navigation"

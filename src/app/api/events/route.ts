@@ -7,6 +7,9 @@ import {
   deleteEvent,
   getAllEvents,
 } from "@/db";
+import { getCloudflareDb } from "@/lib/get-db";
+
+export const runtime = "edge";
 
 const eventSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -22,10 +25,11 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const d1 = await getCloudflareDb();
   const isAdmin = (session.user as { role: string }).role === "admin";
   const events = isAdmin
-    ? getAllEvents()
-    : getEventsByUserId(session.user.id);
+    ? await getAllEvents(d1)
+    : await getEventsByUserId(session.user.id, d1);
 
   return NextResponse.json({ events });
 }
@@ -41,13 +45,14 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = eventSchema.parse(body);
 
-    const event = createEvent({
+    const d1 = await getCloudflareDb();
+    const event = await createEvent({
       userId: session.user.id,
       name: data.name,
       date: data.date,
       type: data.type,
       relationship: data.relationship ?? null,
-    });
+    }, d1);
 
     return NextResponse.json({ event }, { status: 201 });
   } catch (error) {
@@ -77,7 +82,8 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Event ID required" }, { status: 400 });
   }
 
-  const success = deleteEvent(id, session.user.id);
+  const d1 = await getCloudflareDb();
+  const success = await deleteEvent(id, session.user.id, d1);
   if (!success) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }

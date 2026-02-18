@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { findUserByEmail } from "@/db";
+import { findUserByEmail, ensureAdminExists } from "@/db";
+import { getCloudflareDb } from "@/lib/get-db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -17,7 +18,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = credentials.email as string;
         const password = credentials.password as string;
 
-        const user = findUserByEmail(email);
+        const d1 = await getCloudflareDb();
+
+        // Ensure admin account exists in D1 on first login attempt
+        await ensureAdminExists(d1);
+
+        const user = await findUserByEmail(email, d1);
         if (!user) return null;
 
         const isValid = await compare(password, user.password);
