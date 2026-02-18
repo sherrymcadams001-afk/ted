@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   Users,
   CalendarDays,
@@ -14,6 +15,7 @@ import {
   Clock,
   ArrowRight,
   Settings,
+  Trash2,
 } from "lucide-react";
 
 type AdminStats = {
@@ -47,8 +49,11 @@ export default function AdminPage() {
   const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    setError(null);
     try {
       const res = await fetch("/api/admin");
       if (res.ok) {
@@ -65,6 +70,39 @@ export default function AdminPage() {
       setLoading(false);
     }
   }, [router]);
+
+  const onDeleteUser = useCallback(
+    async (user: RecentUser) => {
+      setError(null);
+
+      if (user.id === session?.user?.id) {
+        setError("You cannot delete your own account");
+        return;
+      }
+
+      if (!window.confirm(`Delete user ${user.name} (${user.email})? This will remove their birthdays and conversations.`)) {
+        return;
+      }
+
+      setDeletingUserId(user.id);
+      try {
+        const res = await fetch(`/api/admin/users?id=${encodeURIComponent(user.id)}`, {
+          method: "DELETE",
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(data?.error ?? "Could not delete user");
+          return;
+        }
+        await fetchData();
+      } catch {
+        setError("Could not delete user");
+      } finally {
+        setDeletingUserId(null);
+      }
+    },
+    [fetchData, session?.user?.id]
+  );
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -261,6 +299,11 @@ export default function AdminPage() {
             <Clock size={16} className="text-teal/50" />
             Recent Signups
           </h2>
+          {error && (
+            <div className="mb-3 rounded-lg border border-burgundy/20 bg-burgundy/[0.08] px-3 py-2 text-xs text-burgundy-100">
+              {error}
+            </div>
+          )}
           {recentUsers.length === 0 ? (
             <div className="rounded-xl border border-dashed border-gold/10 py-10 text-center">
               <p className="text-sm text-ivory/20">No users yet</p>
@@ -290,16 +333,28 @@ export default function AdminPage() {
                       </p>
                     </div>
                   </div>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[9px] uppercase",
-                      user.role === "enterprise"
-                        ? "bg-teal/10 text-teal"
-                        : "bg-gold/10 text-gold/60"
-                    )}
-                  >
-                    {user.role}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[9px] uppercase",
+                        user.role === "enterprise"
+                          ? "bg-teal/10 text-teal"
+                          : "bg-gold/10 text-gold/60"
+                      )}
+                    >
+                      {user.role}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      disabled={deletingUserId === user.id || user.id === session.user.id}
+                      onClick={() => onDeleteUser(user)}
+                      title="Delete user"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

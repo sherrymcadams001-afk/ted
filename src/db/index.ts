@@ -224,6 +224,51 @@ export async function getAllUsers(d1?: D1 | null): Promise<User[]> {
   return store.users;
 }
 
+export async function countAdminUsers(d1?: D1 | null): Promise<number> {
+  if (d1) {
+    try {
+      const row = await d1.prepare("SELECT COUNT(*) as cnt FROM users WHERE role = 'admin'").first();
+      const cnt = (row as { cnt?: unknown } | null)?.cnt;
+      return typeof cnt === "number" ? cnt : Number(cnt ?? 0);
+    } catch {
+      return 0;
+    }
+  }
+  return store.users.filter((u) => u.role === "admin").length;
+}
+
+export async function deleteUserAsAdmin(userId: string, d1?: D1 | null): Promise<boolean> {
+  if (d1) {
+    try {
+      // Note: FK constraints were relaxed for guest chat IDs, so we explicitly clean up.
+      await d1
+        .prepare("DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE user_id = ?)")
+        .bind(userId)
+        .run();
+      await d1.prepare("DELETE FROM messages WHERE sender_id = ?").bind(userId).run();
+      await d1.prepare("DELETE FROM events WHERE user_id = ?").bind(userId).run();
+      await d1.prepare("DELETE FROM conversations WHERE user_id = ?").bind(userId).run();
+
+      const result = await d1.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
+      return (result.meta as Record<string, unknown>)?.changes !== 0;
+    } catch {
+      return false;
+    }
+  }
+
+  const convoIds = store.conversations.filter((c) => c.userId === userId).map((c) => c.id);
+  store.messages = store.messages.filter(
+    (m) => m.senderId !== userId && !convoIds.includes(m.conversationId)
+  );
+  store.conversations = store.conversations.filter((c) => c.userId !== userId);
+  store.events = store.events.filter((e) => e.userId !== userId);
+
+  const idx = store.users.findIndex((u) => u.id === userId);
+  if (idx === -1) return false;
+  store.users.splice(idx, 1);
+  return true;
+}
+
 // ═══════════════════════════════════════════════
 // EVENTS (Birthday Protocol)
 // ═══════════════════════════════════════════════

@@ -34,6 +34,7 @@ export default function AdminBirthdaysPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [events, setEvents] = useState<AdminEvent[]>([]);
@@ -182,6 +183,45 @@ export default function AdminBirthdaysPage() {
     }
   };
 
+  const onDeleteUser = async (userId: string) => {
+    setError(null);
+
+    const user = users.find((u) => u.id === userId);
+    const label = user ? `${user.name} (${user.email})` : userId;
+
+    if (userId === session?.user?.id) {
+      setError("You cannot delete your own account");
+      return;
+    }
+
+    if (!window.confirm(`Delete user ${label}? This will remove their birthdays and conversations.`)) {
+      return;
+    }
+
+    setDeletingUser(true);
+    try {
+      const res = await fetch(`/api/admin/users?id=${encodeURIComponent(userId)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error ?? "Could not delete user");
+        return;
+      }
+
+      setUsers((prev) => {
+        const next = prev.filter((u) => u.id !== userId);
+        setSelectedUserId((current) => (current === userId ? (next[0]?.id ?? "") : current));
+        return next;
+      });
+      setEvents((prev) => prev.filter((e) => e.userId !== userId));
+    } catch {
+      setError("Could not delete user");
+    } finally {
+      setDeletingUser(false);
+    }
+  };
+
   if (status === "loading" || loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -273,21 +313,34 @@ export default function AdminBirthdaysPage() {
           className="mb-6 flex flex-col gap-3 rounded-xl border border-gold/15 bg-gold/[0.02] p-4"
         >
           <div className="grid gap-3 md:grid-cols-2">
-            <select
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className={cn(
-                "h-10 rounded-lg border bg-transparent px-3 text-sm text-ivory",
-                "border-gold/15",
-                "focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
-              )}
-            >
-              {users.map((u) => (
-                <option key={u.id} value={u.id} className="bg-black">
-                  {u.name} ({u.email})
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className={cn(
+                  "h-10 flex-1 rounded-lg border bg-transparent px-3 text-sm text-ivory",
+                  "border-gold/15",
+                  "focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
+                )}
+              >
+                {users.map((u) => (
+                  <option key={u.id} value={u.id} className="bg-black">
+                    {u.name} ({u.email})
+                  </option>
+                ))}
+              </select>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                disabled={!selectedUserId || deletingUser || selectedUserId === session?.user?.id}
+                onClick={() => onDeleteUser(selectedUserId)}
+                title="Delete user"
+              >
+                <Trash2 size={14} />
+              </Button>
+            </div>
 
             <input
               type="text"
