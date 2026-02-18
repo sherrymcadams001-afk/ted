@@ -4,26 +4,16 @@ import { auth } from "@/auth";
 /**
  * POST /api/admin/upload
  * Accepts multipart form-data with a "file" field.
- * Stores in Cloudflare R2 bucket and returns the public URL.
- * Falls back to base64 data-URL for local dev (no R2 binding).
+ * Stores in Supabase Storage bucket and returns the public URL.
+ * Falls back to base64 data-URL for local dev (no Supabase config).
  */
 export const runtime = "edge";
 
-interface R2Bucket {
-  put(key: string, body: ArrayBuffer | ReadableStream, options?: Record<string, unknown>): Promise<unknown>;
-  get(key: string): Promise<{ body: ReadableStream; httpMetadata?: Record<string, string> } | null>;
-}
-
-async function getR2Bucket(): Promise<R2Bucket | null> {
-  try {
-    const { getRequestContext } = await import(
-      /* webpackIgnore: true */ "@cloudflare/next-on-pages"
-    );
-    const ctx = getRequestContext() as unknown as { env: { MENU_IMAGES: R2Bucket } };
-    return ctx.env.MENU_IMAGES ?? null;
-  } catch {
-    return null;
-  }
+function getSupabaseConfig() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  if (!url || !key) return null;
+  return { url, key };
 }
 
 export async function POST(req: Request) {
@@ -56,21 +46,36 @@ export async function POST(req: Request) {
     const filename = `${slug}-${Date.now()}.${ext}`;
 
     const bytes = await file.arrayBuffer();
-    const r2 = await getR2Bucket();
+    const supabase = getSupabaseConfig();
 
-    if (r2) {
-      // Production: store in R2
+    if (supabase) {
+      // Production: upload to Supabase Storage
       const contentType =
         ext === "jpg" || ext === "jpeg" ? "image/jpeg"
         : ext === "png" ? "image/png"
         : ext === "webp" ? "image/webp"
         : "image/avif";
 
-      await r2.put(`menu/${filename}`, bytes, {
-        httpMetadata: { contentType },
-      });
+      const uploadRes = await fetch(
+        `${supabase.url}/storage/v1/object/menu-images/${filename}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${supabase.key}`,
+            "Content-Type": contentType,
+            "x-upsert": "true",
+          },
+          body: bytes,
+        }
+      );
 
-      // Return the public R2 URL (via custom domain or r2.dev)
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
+        console.error("Supabase upload error:", errText);
+        return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+      }
+
+      // Return the public URL path (served via our CDN proxy route)
       return NextResponse.json({ path: `/cdn/menu/${filename}` });
     }
 

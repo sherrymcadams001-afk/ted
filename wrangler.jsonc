@@ -10,10 +10,5 @@
       "database_id": "38567476-9efe-4360-a0e7-77163409fbc1"
     }
   ],
-  "r2_buckets": [
-    {
-      "binding": "MENU_IMAGES",
-      "bucket_name": "tedlyns-images"
-    }
-  ]
+  // R2 removed — using Supabase Storage (external free bucket)
 }

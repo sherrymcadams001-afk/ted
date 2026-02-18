@@ -2,44 +2,32 @@ import { NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-interface R2Bucket {
-  get(key: string): Promise<{ body: ReadableStream; httpMetadata?: Record<string, string> } | null>;
-}
-
-async function getR2Bucket(): Promise<R2Bucket | null> {
-  try {
-    const { getRequestContext } = await import(
-      /* webpackIgnore: true */ "@cloudflare/next-on-pages"
-    );
-    const ctx = getRequestContext() as unknown as { env: { MENU_IMAGES: R2Bucket } };
-    return ctx.env.MENU_IMAGES ?? null;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * GET /cdn/menu/[...path]
- * Serves images from R2 bucket. Falls back to 404 in local dev.
+ * Proxies images from Supabase Storage public bucket.
+ * Falls back to 404 in local dev (no Supabase config).
  */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const key = `menu/${path.join("/")}`;
+  const filename = path.join("/");
 
-  const r2 = await getR2Bucket();
-  if (!r2) {
-    return new NextResponse("R2 not available", { status: 404 });
+  const supabaseUrl = process.env.SUPABASE_URL;
+  if (!supabaseUrl) {
+    return new NextResponse("Storage not available", { status: 404 });
   }
 
-  const object = await r2.get(key);
-  if (!object) {
+  // Supabase public bucket URL pattern
+  const objectUrl = `${supabaseUrl}/storage/v1/object/public/menu-images/${filename}`;
+
+  const upstream = await fetch(objectUrl);
+  if (!upstream.ok) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const ext = key.split(".").pop()?.toLowerCase() ?? "";
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   const contentType =
     ext === "jpg" || ext === "jpeg" ? "image/jpeg"
     : ext === "png" ? "image/png"
@@ -47,7 +35,7 @@ export async function GET(
     : ext === "avif" ? "image/avif"
     : "application/octet-stream";
 
-  return new NextResponse(object.body, {
+  return new NextResponse(upstream.body, {
     headers: {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=31536000, immutable",
