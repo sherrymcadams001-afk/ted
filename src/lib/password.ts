@@ -9,8 +9,9 @@ const ITERATIONS = 100_000;
 const KEY_LENGTH = 32; // 256 bits
 const SALT_LENGTH = 16; // 128 bits
 
-function toBase64(buffer: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+function toBase64(data: ArrayBuffer | Uint8Array): string {
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  return btoa(String.fromCharCode(...bytes));
 }
 
 function fromBase64(str: string): Uint8Array {
@@ -20,8 +21,11 @@ function fromBase64(str: string): Uint8Array {
   return bytes;
 }
 
-async function deriveKey(password: string, salt: Uint8Array, iterations: number): Promise<ArrayBuffer> {
+async function deriveKey(password: string, saltBytes: Uint8Array, iterations: number): Promise<ArrayBuffer> {
   const enc = new TextEncoder();
+  // Ensure an ArrayBuffer-backed view for WebCrypto typings
+  const salt = new Uint8Array(saltBytes);
+  const saltBuffer = salt.buffer as ArrayBuffer;
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     enc.encode(password),
@@ -30,7 +34,7 @@ async function deriveKey(password: string, salt: Uint8Array, iterations: number)
     ["deriveBits"]
   );
   return crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+    { name: "PBKDF2", salt: saltBuffer, iterations, hash: "SHA-256" },
     keyMaterial,
     KEY_LENGTH * 8
   );
@@ -48,24 +52,9 @@ export async function hashPassword(password: string): Promise<string> {
 
 /**
  * Compare a plain-text password against a stored hash.
- * Supports both our PBKDF2 format and legacy bcrypt hashes
- * (bcrypt hashes always start with $2b$ or $2a$).
+ * Supports only our PBKDF2 format.
  */
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  // Handle legacy bcrypt hashes — do a constant-time comparison
-  // by re-deriving from a known test. For bcrypt we need the bcryptjs
-  // fallback which we lazy-import only when needed (server-side only).
-  if (stored.startsWith("$2b$") || stored.startsWith("$2a$")) {
-    try {
-      // Dynamic import so it's only loaded when encountering legacy hashes
-      const { compare } = await import("bcryptjs");
-      return compare(password, stored);
-    } catch {
-      // If bcryptjs isn't available (edge), reject legacy hashes
-      return false;
-    }
-  }
-
   // Our PBKDF2 format: $pbkdf2$<iterations>$<salt>$<hash>
   const parts = stored.split("$");
   // parts: ["", "pbkdf2", iterations, salt, hash]
