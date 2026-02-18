@@ -2,6 +2,9 @@
   "name": "tedlyns",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
+  "build": {
+    "command": "npm run pages:build"
+  },
   "pages_build_output_dir": ".vercel/output/static",
   "d1_databases": [
     {
@@ -9,6 +12,6 @@
       "database_name": "tedlyns-db",
       "database_id": "38567476-9efe-4360-a0e7-77163409fbc1"
     }
-  ],
+  ]
   // R2 removed — using Supabase Storage (external free bucket)
 }
