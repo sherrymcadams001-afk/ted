@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Home,
   UtensilsCrossed,
   Heart,
   User,
   MessageCircle,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+const defaultNav = [
   { href: "/", label: "Home", icon: Home },
   { href: "/curate", label: "Curate", icon: UtensilsCrossed },
   { href: "/tribe", label: "Tribe", icon: Heart },
@@ -19,8 +21,18 @@ const navItems = [
   { href: "/account", label: "Account", icon: User },
 ];
 
+const adminNav = [
+  { href: "/", label: "Home", icon: Home },
+  { href: "/curate", label: "Curate", icon: UtensilsCrossed },
+  { href: "/tribe", label: "Tribe", icon: Heart },
+  { href: "/concierge", label: "Chat", icon: MessageCircle },
+  { href: "/admin", label: "Admin", icon: Shield },
+];
+
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const navItems = session?.user?.role === "admin" ? adminNav : defaultNav;
 
   return (
     <nav

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Shield, Save, UserRound } from "lucide-react";
+import { Shield, Save, UserRound, Lock } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -28,6 +28,13 @@ export default function AdminProfilePage() {
   const [phone, setPhone] = useState("");
   const [avatar, setAvatar] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Password change state
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const loadProfile = useCallback(async () => {
     setError(null);
@@ -220,6 +227,108 @@ export default function AdminProfilePage() {
           <Button type="submit" disabled={saving} className="h-10 gap-2">
             <Save size={16} />
             {saving ? "Saving..." : "Save"}
+          </Button>
+        </form>
+      </div>
+
+      {/* ── Password Change ── */}
+      <div className="mt-6 rounded-xl border border-gold/10 bg-gold/[0.02] p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Lock size={14} className="text-gold/60" />
+          <h2 className="font-serif text-lg text-ivory">Change Password</h2>
+        </div>
+
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setPwMsg(null);
+            if (newPw !== confirmPw) {
+              setPwMsg({ type: "err", text: "New passwords do not match" });
+              return;
+            }
+            if (newPw.length < 6) {
+              setPwMsg({ type: "err", text: "Password must be at least 6 characters" });
+              return;
+            }
+            setPwSaving(true);
+            try {
+              const res = await fetch("/api/admin/password", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
+              });
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                setPwMsg({ type: "err", text: data?.error ?? "Could not change password" });
+              } else {
+                setPwMsg({ type: "ok", text: "Password changed successfully" });
+                setCurrentPw("");
+                setNewPw("");
+                setConfirmPw("");
+              }
+            } catch {
+              setPwMsg({ type: "err", text: "Network error" });
+            } finally {
+              setPwSaving(false);
+            }
+          }}
+          className="flex flex-col gap-3"
+        >
+          <input
+            type="password"
+            value={currentPw}
+            onChange={(e) => setCurrentPw(e.target.value)}
+            placeholder="Current password"
+            required
+            className={cn(
+              "h-10 rounded-lg border bg-transparent px-3 text-sm text-ivory",
+              "border-gold/15 placeholder:text-ivory/20",
+              "focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
+            )}
+          />
+          <div className="grid gap-3 md:grid-cols-2">
+            <input
+              type="password"
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
+              placeholder="New password"
+              required
+              className={cn(
+                "h-10 rounded-lg border bg-transparent px-3 text-sm text-ivory",
+                "border-gold/15 placeholder:text-ivory/20",
+                "focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
+              )}
+            />
+            <input
+              type="password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              placeholder="Confirm new password"
+              required
+              className={cn(
+                "h-10 rounded-lg border bg-transparent px-3 text-sm text-ivory",
+                "border-gold/15 placeholder:text-ivory/20",
+                "focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
+              )}
+            />
+          </div>
+
+          {pwMsg && (
+            <div
+              className={cn(
+                "rounded-lg border px-3 py-2 text-xs",
+                pwMsg.type === "ok"
+                  ? "border-teal/20 bg-teal/[0.08] text-teal"
+                  : "border-burgundy/20 bg-burgundy/[0.08] text-burgundy-100"
+              )}
+            >
+              {pwMsg.text}
+            </div>
+          )}
+
+          <Button type="submit" disabled={pwSaving} variant="outline" className="h-10 gap-2">
+            <Lock size={16} />
+            {pwSaving ? "Changing..." : "Change Password"}
           </Button>
         </form>
       </div>

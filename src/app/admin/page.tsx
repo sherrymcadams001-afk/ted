@@ -118,7 +118,15 @@ export default function AdminPage() {
       </div>
 
       {/* Quick Links */}
-      <div className="mb-8 flex gap-2">
+      <div className="mb-8 flex flex-wrap gap-2">
+        <Link
+          href="/admin/site-editor"
+          className="flex items-center gap-1.5 rounded-lg border border-gold/30 bg-gold/[0.06] px-4 py-2 text-xs text-gold hover:bg-gold/10 transition-colors"
+        >
+          Site Editor
+          <Settings size={12} />
+        </Link>
+
         <Link
           href="/admin/curate"
           className="flex items-center gap-1.5 rounded-lg border border-gold/15 px-4 py-2 text-xs text-ivory/60 hover:bg-gold/5 hover:text-gold transition-colors"

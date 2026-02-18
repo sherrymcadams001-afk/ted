@@ -810,3 +810,84 @@ export async function ensureAdminExists(d1?: D1 | null): Promise<void> {
 
 // Auto-seed on module load (dev only — in-memory store)
 seedDevAdmin();
+
+// ═══════════════════════════════════════════════
+// SITE CONTENT (Admin CMS)
+// ═══════════════════════════════════════════════
+
+export type SiteContentRow = { key: string; value: string; type: string; label: string; page: string };
+
+const devContent: Map<string, SiteContentRow> = new Map();
+
+export async function getSiteContentByPage(page: string, d1?: D1 | null): Promise<Record<string, string>> {
+  if (d1) {
+    try {
+      const { results } = await d1.prepare("SELECT key, value FROM site_content WHERE page = ?").bind(page).all();
+      const map: Record<string, string> = {};
+      for (const row of results as Record<string, unknown>[]) {
+        map[row.key as string] = row.value as string;
+      }
+      return map;
+    } catch {
+      return {};
+    }
+  }
+  const map: Record<string, string> = {};
+  for (const [k, v] of devContent) {
+    if (v.page === page) map[k] = v.value;
+  }
+  return map;
+}
+
+export async function getAllSiteContent(d1?: D1 | null): Promise<SiteContentRow[]> {
+  if (d1) {
+    try {
+      const { results } = await d1.prepare("SELECT key, value, type, label, page FROM site_content ORDER BY page, key").all();
+      return (results as Record<string, unknown>[]).map((r) => ({
+        key: r.key as string,
+        value: r.value as string,
+        type: r.type as string,
+        label: r.label as string,
+        page: r.page as string,
+      }));
+    } catch {
+      return [];
+    }
+  }
+  return Array.from(devContent.values());
+}
+
+export async function updateSiteContent(key: string, value: string, d1?: D1 | null): Promise<boolean> {
+  const now = nowEpoch();
+  if (d1) {
+    try {
+      await d1.prepare("UPDATE site_content SET value = ?, updated_at = ? WHERE key = ?").bind(value, now, key).run();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  const existing = devContent.get(key);
+  if (existing) {
+    existing.value = value;
+    return true;
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════
+// PASSWORD UPDATE
+// ═══════════════════════════════════════════════
+
+export async function updateUserPassword(userId: string, hashedPassword: string, d1?: D1 | null): Promise<boolean> {
+  const now = nowEpoch();
+  if (d1) {
+    const result = await d1.prepare("UPDATE users SET password = ?, updated_at = ? WHERE id = ?").bind(hashedPassword, now, userId).run();
+    return ((result.meta?.changes as number) ?? 0) > 0;
+  }
+  const user = store.users.find((u) => u.id === userId);
+  if (!user) return false;
+  user.password = hashedPassword;
+  user.updatedAt = new Date();
+  return true;
+}

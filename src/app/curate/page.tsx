@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -50,10 +51,25 @@ type CategoryData = { headline: string; sub: string; icon: string; items: MenuIt
 type MenuData = Record<string, CategoryData>;
 
 export default function CuratePage() {
-  const [activeCategory, setActiveCategory] = useState<CategoryId>("corporate");
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view"); // "corporate" | "retail" | null
+
+  const visibleCategories = view === "corporate"
+    ? categories.filter((c) => c.id === "corporate")
+    : view === "retail"
+      ? categories.filter((c) => c.id !== "corporate")
+      : categories;
+
+  const [activeCategory, setActiveCategory] = useState<CategoryId>(visibleCategories[0].id);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Reset active category when view changes
+  useEffect(() => {
+    setActiveCategory(visibleCategories[0].id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   useEffect(() => {
     fetch("/api/curate")
@@ -90,7 +106,7 @@ export default function CuratePage() {
 
       {/* Category Tabs */}
       <div className="mb-8 flex justify-center gap-2">
-        {categories.map((cat) => {
+        {visibleCategories.map((cat) => {
           const Icon = cat.icon;
           const isActive = activeCategory === cat.id;
           return (

@@ -20,7 +20,9 @@ export default auth((req) => {
 
   // Redirect authenticated users away from auth routes
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
+    const role = req.auth?.user?.role;
+    const dest = role === "admin" ? "/admin" : "/dashboard";
+    return NextResponse.redirect(new URL(dest, req.nextUrl.origin));
   }
 
   // Admin-only route guard

@@ -6,6 +6,18 @@ import { cn } from "@/lib/utils";
 import { Volume2, VolumeX } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useSiteContent } from "@/lib/use-site-content";
+
+const HERO_DEFAULTS: Record<string, string> = {
+  "home.hero.tagline": "Indulge Yourself",
+  "home.hero.subtitle": "Where every dish tells a story and every gathering becomes an occasion. Abuja\u2019s finest culinary logistics \u2014 seamless from our kitchen to your table.",
+  "home.hero.video": "/vid.mp4",
+  "home.hero.poster": "/hero-poster.jpg",
+  "home.hero.cta1_text": "Corporate Solutions",
+  "home.hero.cta1_link": "/curate?view=corporate",
+  "home.hero.cta2_text": "Retail Collections",
+  "home.hero.cta2_link": "/curate?view=retail",
+};
 
 /* ── Staggered reveal orchestration ── */
 const container = {
@@ -43,6 +55,7 @@ const dividerExpand = {
 };
 
 export function HeroSection() {
+  const { content: c } = useSiteContent("home", HERO_DEFAULTS);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -70,9 +83,9 @@ export function HeroSection() {
           playsInline
           preload="auto"
           onLoadedData={() => setIsLoaded(true)}
-          poster="/hero-poster.jpg"
+          poster={c["home.hero.poster"]}
         >
-          <source src="/vid.mp4" type="video/mp4" />
+          <source src={c["home.hero.video"]} type="video/mp4" />
         </video>
 
         {/* Gradient Overlays */}
@@ -104,7 +117,7 @@ export function HeroSection() {
             "tracking-wide drop-shadow-[0_2px_20px_rgba(212,175,55,0.2)]"
           )}
         >
-          Indulge Yourself
+          {c["home.hero.tagline"]}
         </motion.h1>
 
         {/* Gold Divider */}
@@ -119,28 +132,26 @@ export function HeroSection() {
           variants={fadeUp}
           className="max-w-lg text-sm leading-relaxed text-ivory/50 sm:text-base md:text-lg"
         >
-          Where every dish tells a story and every gathering becomes an
-          occasion. Abuja&apos;s finest culinary logistics — seamless from
-          our kitchen to your table.
+          {c["home.hero.subtitle"]}
         </motion.p>
 
         {/* CTAs */}
         <motion.div variants={fadeUp} className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-          <Link href="/curate">
+          <Link href={c["home.hero.cta1_link"]}>
             <Button
               variant="outline"
               size="lg"
               className="gap-2 border-gold/40 text-gold hover:bg-gold/10 hover:border-gold/60"
             >
-              Corporate Solutions
+              {c["home.hero.cta1_text"]}
             </Button>
           </Link>
-          <Link href="/curate">
+          <Link href={c["home.hero.cta2_link"]}>
             <Button
               size="lg"
               className="gap-2 bg-burgundy text-ivory hover:bg-burgundy-400 shadow-lg shadow-burgundy/20"
             >
-              Retail Collections
+              {c["home.hero.cta2_text"]}
             </Button>
           </Link>
         </motion.div>

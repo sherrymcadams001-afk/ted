@@ -95,6 +95,16 @@ export const menuItems = sqliteTable("menu_items", {
     .$defaultFn(() => new Date()),
 });
 
+// ── Site Content (Admin CMS) ──
+export const siteContent = sqliteTable("site_content", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull().default(""),
+  type: text("type", { enum: ["text", "textarea", "image", "json"] }).notNull().default("text"),
+  label: text("label").notNull().default(""),
+  page: text("page").notNull().default("home"),
+  updatedAt: integer("updated_at", { mode: "timestamp" }),
+});
+
 // ── Type exports for use across the app ──
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -106,3 +116,4 @@ export type Conversation = typeof conversations.$inferSelect;
 export type NewConversation = typeof conversations.$inferInsert;
 export type MenuItem = typeof menuItems.$inferSelect;
 export type NewMenuItem = typeof menuItems.$inferInsert;
+export type SiteContent = typeof siteContent.$inferSelect;

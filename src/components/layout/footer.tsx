@@ -1,7 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { Shield, Heart } from "lucide-react";
+import { useSiteContent } from "@/lib/use-site-content";
+
+const FOOTER_DEFAULTS: Record<string, string> = {
+  "footer.tagline": "From boardrooms to birthday parties \u2014 we bring the flavour, you bring the people.",
+  "footer.bottom_text": "Abuja, Nigeria \u2014 Culinary Logistics & Curated Experiences",
+};
 
 export function Footer() {
+  const { content: c } = useSiteContent("footer", FOOTER_DEFAULTS);
+
   return (
     <footer className="relative border-t border-gold/10 bg-obsidian">
       <div className="mx-auto max-w-6xl px-6 py-14 md:py-20">
@@ -14,12 +24,11 @@ export function Footer() {
                 Tedlyns
               </span>
               <span className="text-[9px] lowercase tracking-widest text-ivory/30 leading-none mt-0.5">
-                a Tedlyn's concept
+                a Tedlyn&apos;s concept
               </span>
             </Link>
             <p className="mt-4 max-w-[260px] text-xs text-ivory/25 leading-relaxed text-center md:text-left">
-              From boardrooms to birthday parties — we bring the flavour,
-              you bring the people.
+              {c["footer.tagline"]}
             </p>
           </div>
 
@@ -84,7 +93,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Tedlyns Concept. All rights reserved.
           </p>
           <p className="text-[10px] text-ivory/15 tracking-wide">
-            Abuja, Nigeria — Culinary Logistics &amp; Curated Experiences
+            {c["footer.bottom_text"]}
           </p>
         </div>
       </div>

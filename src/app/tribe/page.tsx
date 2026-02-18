@@ -16,6 +16,44 @@ import {
   Quote,
   Shield,
 } from "lucide-react";
+import { useSiteContent } from "@/lib/use-site-content";
+
+const TRIBE_DEFAULTS: Record<string, string> = {
+  "tribe.header_label": "Profits With Purpose",
+  "tribe.header_title": "Ted\u2019s Tribe",
+  "tribe.header_subtitle": "Every Tedlyns experience contributes to something bigger. We believe that no celebration should happen in isolation \u2014 when we eat well, we should make sure others do too.",
+  "tribe.founder.image": "/ceo.jpg",
+  "tribe.founder.name": "Ere Erhiaghe",
+  "tribe.founder.title": "Founder & Head Chef",
+  "tribe.founder.quote": "I started Tedlyns with a simple belief: food is more than just sustenance \u2014 it\u2019s how we celebrate, how we connect, how we show love. Growing up in Abuja, I saw how a shared meal could bridge any divide. Ted\u2019s Tribe is my promise that every plate we serve creates ripples of good that reach far beyond the table. When you order from us, you\u2019re not just feeding your guests \u2014 you\u2019re feeding someone else\u2019s hope.",
+  "tribe.kindred_intro": "Kindred Spirits is our community initiative \u2014 a network of clients, partners, and volunteers who believe that every Nigerian deserves a seat at the table. When you order with Tedlyns, you automatically become a Kindred Spirit. Welcome to the family.",
+  "tribe.pillar1_title": "Meal Outreach",
+  "tribe.pillar1_desc": "We partner with local shelters and schools to provide nutritious meals to those in need across Abuja. Because no one should go hungry while we celebrate.",
+  "tribe.pillar2_title": "Culinary Training",
+  "tribe.pillar2_desc": "Our apprenticeship programme equips young Nigerians with professional catering skills and small-business know-how. We\u2019re building the next generation of chefs and entrepreneurs.",
+  "tribe.pillar3_title": "Red Cross Partnership",
+  "tribe.pillar3_desc": "A portion of every Tedlyns order supports the Nigerian Red Cross Society\u2019s emergency relief and disaster response. Your indulgence has impact.",
+  "tribe.stat1_value": "2400",
+  "tribe.stat1_suffix": "+",
+  "tribe.stat1_label": "Meals Donated",
+  "tribe.stat2_value": "150",
+  "tribe.stat2_suffix": "+",
+  "tribe.stat2_label": "Chefs Trained",
+  "tribe.stat3_value": "12",
+  "tribe.stat3_suffix": "",
+  "tribe.stat3_label": "Communities Reached",
+  "tribe.partner_title": "Official Partner \u2014 Nigerian Red Cross Society",
+  "tribe.partner_subtitle": "FCT Chapter \u00b7 Since 2023",
+  "tribe.testimonial1_quote": "Tedlyns didn\u2019t just cater our conference \u2014 they fed our entire shelter for a month. That\u2019s the kind of business Nigeria needs more of.",
+  "tribe.testimonial1_author": "Amina B.",
+  "tribe.testimonial1_role": "Director, Hope House Abuja",
+  "tribe.testimonial2_quote": "The apprenticeship changed my life. I now run my own small catering outfit and I employ two people. Tedlyns gave me a chance when nobody else would.",
+  "tribe.testimonial2_author": "Chukwuemeka O.",
+  "tribe.testimonial2_role": "Tedlyns Alumni, Class of 2024",
+  "tribe.testimonial3_quote": "I order from Tedlyns because the food is excellent \u2014 but knowing that my money also feeds families? That\u2019s why I keep coming back.",
+  "tribe.testimonial3_author": "Funke A.",
+  "tribe.testimonial3_role": "Regular Client, Maitama",
+};
 
 function AnimatedCounter({
   target,
@@ -60,72 +98,39 @@ function AnimatedCounter({
   );
 }
 
-const pillars = [
-  {
-    icon: HandHeart,
-    title: "Meal Outreach",
-    description:
-      "We partner with local shelters and schools to provide nutritious meals to those in need across Abuja. Because no one should go hungry while we celebrate.",
-    color: "text-gold",
-    bg: "bg-gold/[0.06]",
-    border: "border-gold/15",
-  },
-  {
-    icon: GraduationCap,
-    title: "Culinary Training",
-    description:
-      "Our apprenticeship programme equips young Nigerians with professional catering skills and small-business know-how. We're building the next generation of chefs and entrepreneurs.",
-    color: "text-teal",
-    bg: "bg-teal/[0.06]",
-    border: "border-teal/15",
-  },
-  {
-    icon: Heart,
-    title: "Red Cross Partnership",
-    description:
-      "A portion of every Tedlyns order supports the Nigerian Red Cross Society's emergency relief and disaster response. Your indulgence has impact.",
-    color: "text-burgundy-300",
-    bg: "bg-burgundy/[0.06]",
-    border: "border-burgundy/15",
-  },
-];
-
-const testimonials = [
-  {
-    quote:
-      "Tedlyns didn't just cater our conference — they fed our entire shelter for a month. That's the kind of business Nigeria needs more of.",
-    author: "Amina B.",
-    role: "Director, Hope House Abuja",
-  },
-  {
-    quote:
-      "The apprenticeship changed my life. I now run my own small catering outfit and I employ two people. Tedlyns gave me a chance when nobody else would.",
-    author: "Chukwuemeka O.",
-    role: "Tedlyns Alumni, Class of 2024",
-  },
-  {
-    quote:
-      "I order from Tedlyns because the food is excellent — but knowing that my money also feeds families? That's why I keep coming back.",
-    author: "Funke A.",
-    role: "Regular Client, Maitama",
-  },
+const pillarMeta = [
+  { icon: HandHeart, color: "text-gold", bg: "bg-gold/[0.06]", border: "border-gold/15" },
+  { icon: GraduationCap, color: "text-teal", bg: "bg-teal/[0.06]", border: "border-teal/15" },
+  { icon: Heart, color: "text-burgundy-300", bg: "bg-burgundy/[0.06]", border: "border-burgundy/15" },
 ];
 
 export default function TribePage() {
+  const { content: c } = useSiteContent("tribe", TRIBE_DEFAULTS);
+
+  const pillars = [
+    { title: c["tribe.pillar1_title"], description: c["tribe.pillar1_desc"], ...pillarMeta[0] },
+    { title: c["tribe.pillar2_title"], description: c["tribe.pillar2_desc"], ...pillarMeta[1] },
+    { title: c["tribe.pillar3_title"], description: c["tribe.pillar3_desc"], ...pillarMeta[2] },
+  ];
+
+  const testimonials = [
+    { quote: c["tribe.testimonial1_quote"], author: c["tribe.testimonial1_author"], role: c["tribe.testimonial1_role"] },
+    { quote: c["tribe.testimonial2_quote"], author: c["tribe.testimonial2_author"], role: c["tribe.testimonial2_role"] },
+    { quote: c["tribe.testimonial3_quote"], author: c["tribe.testimonial3_author"], role: c["tribe.testimonial3_role"] },
+  ];
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 md:py-14">
       {/* Header */}
       <div className="mb-12 text-center">
         <p className="text-[10px] uppercase tracking-[0.25em] text-burgundy-300/80">
-          Profits With Purpose
+          {c["tribe.header_label"]}
         </p>
         <h1 className="mt-2 font-serif text-3xl font-bold text-ivory md:text-4xl lg:text-5xl">
-          Ted&apos;s Tribe
+          {c["tribe.header_title"]}
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-ivory/40 md:text-base">
-          Every Tedlyns experience contributes to something bigger. We believe
-          that no celebration should happen in isolation — when we eat well,
-          we should make sure others do too.
+          {c["tribe.header_subtitle"]}
         </p>
       </div>
 
@@ -133,9 +138,10 @@ export default function TribePage() {
       <div className="mb-12 rounded-2xl border border-gold/10 bg-gradient-to-br from-gold/[0.04] to-transparent p-6 md:p-8 lg:p-10">
         <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-10">
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full md:h-28 md:w-28">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/ceo.jpg"
-              alt="Ere Erhiaghe — Founder & Head Chef"
+              src={c["tribe.founder.image"]}
+              alt={`${c["tribe.founder.name"]} — ${c["tribe.founder.title"]}`}
               className="h-full w-full object-cover"
             />
           </div>
@@ -147,16 +153,10 @@ export default function TribePage() {
               </p>
             </div>
             <h2 className="mt-1 font-serif text-lg text-ivory md:text-xl">
-              Ere Erhiaghe — Founder & Head Chef
+              {c["tribe.founder.name"]} — {c["tribe.founder.title"]}
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-ivory/40 md:text-base">
-              &ldquo;I started Tedlyns with a simple belief: food is more than
-              just sustenance — it&apos;s how we celebrate, how we connect, how
-              we show love. Growing up in Abuja, I saw how a shared meal could
-              bridge any divide. Ted&apos;s Tribe is my promise that every plate
-              we serve creates ripples of good that reach far beyond the table.
-              When you order from us, you&apos;re not just feeding your guests —
-              you&apos;re feeding someone else&apos;s hope.&rdquo;
+              &ldquo;{c["tribe.founder.quote"]}&rdquo;
             </p>
           </div>
         </div>
@@ -171,10 +171,7 @@ export default function TribePage() {
           </h2>
         </div>
         <p className="mb-6 max-w-2xl text-sm leading-relaxed text-ivory/40 md:text-base">
-          Kindred Spirits is our community initiative — a network of clients,
-          partners, and volunteers who believe that every Nigerian deserves a
-          seat at the table. When you order with Tedlyns, you automatically
-          become a Kindred Spirit. Welcome to the family.
+          {c["tribe.kindred_intro"]}
         </p>
 
         {/* Pillars — fills desktop */}
@@ -205,24 +202,18 @@ export default function TribePage() {
 
       {/* Impact Counters */}
       <div className="mb-12 grid grid-cols-3 gap-4 text-center lg:gap-6">
-        <div className="rounded-xl border border-gold/10 bg-gold/[0.03] py-6 md:py-8">
-          <AnimatedCounter target={2400} suffix="+" />
-          <p className="mt-1 text-[10px] uppercase tracking-wider text-ivory/30">
-            Meals Donated
-          </p>
-        </div>
-        <div className="rounded-xl border border-teal/10 bg-teal/[0.03] py-6 md:py-8">
-          <AnimatedCounter target={150} suffix="+" />
-          <p className="mt-1 text-[10px] uppercase tracking-wider text-ivory/30">
-            Chefs Trained
-          </p>
-        </div>
-        <div className="rounded-xl border border-burgundy/10 bg-burgundy/[0.03] py-6 md:py-8">
-          <AnimatedCounter target={12} />
-          <p className="mt-1 text-[10px] uppercase tracking-wider text-ivory/30">
-            Communities Reached
-          </p>
-        </div>
+        {[
+          { value: parseInt(c["tribe.stat1_value"]) || 0, suffix: c["tribe.stat1_suffix"], label: c["tribe.stat1_label"], border: "border-gold/10", bg: "bg-gold/[0.03]" },
+          { value: parseInt(c["tribe.stat2_value"]) || 0, suffix: c["tribe.stat2_suffix"], label: c["tribe.stat2_label"], border: "border-teal/10", bg: "bg-teal/[0.03]" },
+          { value: parseInt(c["tribe.stat3_value"]) || 0, suffix: c["tribe.stat3_suffix"], label: c["tribe.stat3_label"], border: "border-burgundy/10", bg: "bg-burgundy/[0.03]" },
+        ].map((stat) => (
+          <div key={stat.label} className={cn("rounded-xl border py-6 md:py-8", stat.border, stat.bg)}>
+            <AnimatedCounter target={stat.value} suffix={stat.suffix} />
+            <p className="mt-1 text-[10px] uppercase tracking-wider text-ivory/30">
+              {stat.label}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Testimonials — Desktop: 3 columns */}
@@ -264,10 +255,10 @@ export default function TribePage() {
         </div>
         <div className="md:text-left">
           <p className="font-serif text-base text-ivory">
-            Official Partner — Nigerian Red Cross Society
+            {c["tribe.partner_title"]}
           </p>
           <p className="text-xs text-ivory/30">
-            FCT Chapter · Since 2023
+            {c["tribe.partner_subtitle"]}
           </p>
         </div>
       </div>

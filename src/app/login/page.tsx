@@ -32,7 +32,11 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password. Try again or create an account.");
       } else {
-        router.push("/dashboard");
+        // Fetch session to determine role-based redirect
+        const sessionRes = await fetch("/api/auth/session");
+        const sess = await sessionRes.json().catch(() => null);
+        const dest = sess?.user?.role === "admin" ? "/admin" : "/dashboard";
+        router.push(dest);
         router.refresh();
       }
     } catch {
