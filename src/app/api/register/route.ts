@@ -19,10 +19,21 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = registerSchema.parse(body);
 
+    const email = data.email.trim().toLowerCase();
+
     const d1 = await getCloudflareDb();
+    if (!d1 && process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        {
+          error:
+            "Service misconfigured: database not connected. Please try again later.",
+        },
+        { status: 503 }
+      );
+    }
 
     // Check if user already exists
-    const existing = await findUserByEmail(data.email, d1);
+    const existing = await findUserByEmail(email, d1);
     if (existing) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
@@ -36,7 +47,7 @@ export async function POST(req: Request) {
     // Create user
     const user = await createUser({
       name: data.name,
-      email: data.email,
+      email,
       password: hashedPassword,
       role: data.role,
       company: data.company ?? null,

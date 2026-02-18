@@ -40,6 +40,7 @@ export default function AdminBirthdaysPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState("");
+  const [showUpcomingOnly, setShowUpcomingOnly] = useState(true);
 
   // form
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -102,8 +103,22 @@ export default function AdminBirthdaysPage() {
     const sorted = [...events].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
-    if (!q) return sorted;
-    return sorted.filter((e) => {
+
+    const now = new Date();
+    const base = showUpcomingOnly
+      ? sorted.filter((e) => {
+          const [year, month, day] = e.date.split("-").map(Number);
+          if (!year || !month || !day) return false;
+
+          const thisYear = new Date(now.getFullYear(), month - 1, day);
+          const diffDays =
+            (thisYear.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+          return diffDays >= 0 && diffDays <= 7;
+        })
+      : sorted;
+
+    if (!q) return base;
+    return base.filter((e) => {
       const haystack = [
         e.name,
         e.relationship ?? "",
@@ -114,7 +129,7 @@ export default function AdminBirthdaysPage() {
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [events, query]);
+  }, [events, query, showUpcomingOnly]);
 
   const onAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,6 +233,38 @@ export default function AdminBirthdaysPage() {
           {showForm ? <X size={14} /> : <Plus size={14} />}
           {showForm ? "Cancel" : "Add Birthday"}
         </Button>
+      </div>
+
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex rounded-lg border border-gold/15 bg-gold/[0.02] p-1">
+          <button
+            type="button"
+            onClick={() => setShowUpcomingOnly(true)}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs transition-colors",
+              showUpcomingOnly
+                ? "bg-gold/10 text-gold"
+                : "text-ivory/40 hover:text-ivory/70"
+            )}
+          >
+            Upcoming (7 days)
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowUpcomingOnly(false)}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs transition-colors",
+              !showUpcomingOnly
+                ? "bg-gold/10 text-gold"
+                : "text-ivory/40 hover:text-ivory/70"
+            )}
+          >
+            All
+          </button>
+        </div>
+        <p className="text-xs text-ivory/30 whitespace-nowrap">
+          {filteredEvents.length} shown
+        </p>
       </div>
 
       {showForm && (

@@ -38,13 +38,35 @@ interface CloudflareEnv {
  * At runtime on CF Pages the module is available; locally it throws → null.
  */
 export async function getCloudflareDb(): Promise<D1 | null> {
+  let getRequestContext: undefined | (() => unknown);
   try {
-    const { getRequestContext } = await import(
+    ({ getRequestContext } = await import(
       /* webpackIgnore: true */ "@cloudflare/next-on-pages"
-    );
-    const ctx = getRequestContext() as unknown as { env: CloudflareEnv };
-    return ctx.env.DB;
+    ));
   } catch {
+    // Local dev: module isn't available / context isn't present.
     return null;
   }
+
+  let ctx: { env?: Partial<CloudflareEnv> };
+  try {
+    ctx = getRequestContext() as unknown as { env?: Partial<CloudflareEnv> };
+  } catch {
+    // Local dev: no request context.
+    return null;
+  }
+
+  const db = ctx?.env?.DB ?? null;
+  if (!db) {
+    // On Pages/Workers, missing DB binding causes signup/login to appear to work
+    // but actually uses the in-memory fallback, which resets between requests.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "Cloudflare D1 binding 'DB' is missing. Add a D1 binding named 'DB' in your Pages project settings."
+      );
+    }
+    return null;
+  }
+
+  return db;
 }
