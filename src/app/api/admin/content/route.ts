@@ -13,8 +13,8 @@ export async function GET() {
 
   try {
     const d1 = await getCloudflareDb();
-    const items = await getAllSiteContent(d1);
-    return NextResponse.json({ items });
+    const content = await getAllSiteContent(d1);
+    return NextResponse.json({ content });
   } catch {
     return NextResponse.json({ error: "Failed to load content" }, { status: 500 });
   }
@@ -30,8 +30,9 @@ export async function PUT(req: NextRequest) {
     const d1 = await getCloudflareDb();
     const body = await req.json();
 
-    // Accept { key, value } or [{ key, value }, ...]
-    const updates: { key: string; value: string }[] = Array.isArray(body) ? body : [body];
+    // Accept { updates: [...] }, [{ key, value }, ...], or { key, value }
+    const raw = body?.updates ?? body;
+    const updates: { key: string; value: string }[] = Array.isArray(raw) ? raw : [raw];
 
     let updated = 0;
     for (const { key, value } of updates) {
