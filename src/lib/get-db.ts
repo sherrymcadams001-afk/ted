@@ -25,6 +25,7 @@ export interface D1 {
 
 interface CloudflareEnv {
   DB: D1;
+  tedlynsdb: D1;
 }
 
 // Static ESM import — the module is installed, so webpack resolves it.
@@ -54,13 +55,14 @@ export async function getCloudflareDb(): Promise<D1 | null> {
     return null;
   }
 
-  const db = ctx?.env?.DB ?? null;
+  const env = (ctx?.env ?? {}) as Partial<CloudflareEnv> & Record<string, unknown>;
+  const db = (env.DB as D1 | undefined) ?? (env.tedlynsdb as D1 | undefined) ?? null;
   if (!db) {
     // On Pages/Workers, missing DB binding causes signup/login to appear to work
     // but actually uses the in-memory fallback, which resets between requests.
     if (process.env.NODE_ENV === "production") {
       throw new Error(
-        "Cloudflare D1 binding 'DB' is missing. Add a D1 binding named 'DB' in your Pages project settings."
+        "Cloudflare D1 binding is missing. Add a D1 binding named 'DB' (preferred) or 'tedlynsdb' in your Pages project settings."
       );
     }
     return null;

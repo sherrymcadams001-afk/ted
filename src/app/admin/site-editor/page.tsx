@@ -68,12 +68,17 @@ export default function SiteEditorPage() {
         router.push("/dashboard");
         return;
       }
-      if (res.ok) {
-        const data = await res.json();
-        setRows(data.content ?? []);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg({
+          type: "err",
+          text: data?.error ? String(data.error) : `Failed to load content (HTTP ${res.status})`,
+        });
+        return;
       }
+      setRows(data.content ?? []);
     } catch {
-      // silent
+      setMsg({ type: "err", text: "Failed to load content (network error)" });
     } finally {
       setLoading(false);
     }
